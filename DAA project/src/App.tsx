@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
 import {
   Binary,
   ChevronRight,
-  CircleDot,
+  CircleCheck,
   LayoutDashboard,
-  Orbit,
   Radar,
-  Sparkles,
+  SquareFunction,
 } from "lucide-react"
 import { Overview } from "./pages/Overview"
 import { ClosestPairPage } from "./pages/ClosestPair"
@@ -21,10 +21,11 @@ const NAV: Array<{
   label: string
   icon: typeof LayoutDashboard
   hint: string
+  group: string
 }> = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard, hint: "Project home" },
-  { id: "closest-pair", label: "Closest Pair", icon: Radar, hint: "Geometry" },
-  { id: "karatsuba", label: "Karatsuba", icon: Binary, hint: "Big integers" },
+  { id: "overview", label: "Overview", icon: LayoutDashboard, hint: "Project home", group: "Workbench" },
+  { id: "closest-pair", label: "Closest Pair", icon: Radar, hint: "O(n log n) · geometry", group: "Algorithms" },
+  { id: "karatsuba", label: "Karatsuba", icon: Binary, hint: "O(n¹·⁵⁸⁵) · big integers", group: "Algorithms" },
 ]
 
 const PAGE_META: Record<Page, { title: string; section: string }> = {
@@ -55,147 +56,128 @@ function App() {
   }
 
   const meta = PAGE_META[page]
+  const groups = Array.from(new Set(NAV.map((item) => item.group)))
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
-      <div className="pointer-events-none fixed inset-0 bg-grid opacity-60 [mask-image:radial-gradient(ellipse_80%_60%_at_50%_0%,black,transparent)]" />
-      <div className="pointer-events-none fixed -left-40 top-0 h-[34rem] w-[34rem] rounded-full bg-primary/10 blur-[140px]" />
-      <div className="pointer-events-none fixed -right-40 top-1/3 h-[30rem] w-[30rem] rounded-full bg-accent/[0.06] blur-[140px]" />
-
-      <div className="relative mx-auto flex min-h-screen w-full max-w-[1560px]">
-        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border/70 bg-surface/40 px-4 py-6 backdrop-blur-xl lg:flex">
+    <div className="relative min-h-screen">
+      <div className="mx-auto flex min-h-screen w-full max-w-[1520px]">
+        <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-border bg-background px-3.5 py-5 lg:flex">
           <button
             type="button"
             onClick={() => navigate("overview")}
-            className="flex items-center gap-3 rounded-xl px-2 text-left focus-visible:outline-none"
+            className="flex items-center gap-2.5 rounded-lg px-1.5 py-1 text-left focus-visible:outline-none"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-soft via-primary to-primary-deep shadow-[0_10px_30px_-12px_rgba(139,92,246,0.9)]">
-              <Orbit className="h-5 w-5 text-white" />
+            <span className="flex h-8 w-8 items-center justify-center rounded-md border border-border-strong bg-elevated">
+              <SquareFunction className="h-4 w-4 text-primary-soft" />
             </span>
             <span>
-              <span className="block text-sm font-semibold tracking-tight">
+              <span className="block text-[13px] font-semibold tracking-tight">
                 AlgoLab
               </span>
-              <span className="block text-[10px] uppercase tracking-[0.18em] text-muted">
-                Workbench
+              <span className="block font-mono text-[9.5px] uppercase tracking-[0.14em] text-muted">
+                DAA workbench
               </span>
             </span>
           </button>
 
-          <div className="mt-8 px-2 text-[10px] font-medium uppercase tracking-[0.16em] text-muted/70">
-            Navigation
-          </div>
-          <nav className="mt-2 space-y-1">
-            {NAV.map((item) => {
-              const active = page === item.id
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => navigate(item.id)}
-                  className={cn(
-                    "group flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all duration-200",
-                    active
-                      ? "border-primary/25 bg-primary/10 text-foreground shadow-[0_10px_30px_-20px_rgba(139,92,246,0.9)]"
-                      : "border-transparent text-muted hover:border-border/80 hover:bg-white/[0.03] hover:text-foreground",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-lg border transition-colors",
-                      active
-                        ? "border-primary/30 bg-primary/15 text-primary-soft"
-                        : "border-border/70 bg-surface text-muted group-hover:text-muted-strong",
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[13px] font-medium">
-                      {item.label}
-                    </span>
-                    <span className="block text-[10px] text-muted">
-                      {item.hint}
-                    </span>
-                  </span>
-                  <ChevronRight
-                    className={cn(
-                      "h-3.5 w-3.5 transition-all",
-                      active
-                        ? "translate-x-0 text-primary-soft opacity-100"
-                        : "-translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-60",
-                    )}
-                  />
-                </button>
-              )
-            })}
+          <nav className="mt-7 flex-1 space-y-5">
+            {groups.map((group) => (
+              <div key={group}>
+                <p className="px-2 font-mono text-[9.5px] uppercase tracking-[0.16em] text-muted/70">
+                  {group}
+                </p>
+                <div className="mt-1.5 space-y-0.5">
+                  {NAV.filter((item) => item.group === group).map((item) => {
+                    const active = page === item.id
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => navigate(item.id)}
+                        className={cn(
+                          "group relative flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors duration-150",
+                          active
+                            ? "bg-elevated text-foreground"
+                            : "text-muted hover:bg-white/[0.03] hover:text-foreground",
+                        )}
+                      >
+                        {active ? (
+                          <motion.span
+                            layoutId="nav-marker"
+                            className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-primary"
+                            transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                          />
+                        ) : null}
+                        <item.icon
+                          className={cn(
+                            "h-3.5 w-3.5 shrink-0",
+                            active ? "text-primary-soft" : "text-muted/70",
+                          )}
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[12.5px] font-medium leading-tight">
+                            {item.label}
+                          </span>
+                          <span className="block truncate font-mono text-[9.5px] text-muted/70">
+                            {item.hint}
+                          </span>
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
-          <div className="mt-auto space-y-3">
-            <div className="rounded-2xl border border-border/80 bg-card/60 p-4">
-              <p className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground">
-                <Sparkles className="h-3.5 w-3.5 text-primary-soft" />
-                Design &amp; Analysis
-              </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-muted">
-                A course project exploring two divide-and-conquer algorithms
-                with verified, reproducible results.
-              </p>
-              <div className="mt-3 flex items-center gap-1.5 text-[10px] text-success">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-70" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
-                </span>
-                Verification harness online
-              </div>
-            </div>
+          <div className="rounded-lg border border-border bg-surface/60 p-3">
+            <p className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-muted">
+              Harness
+            </p>
+            <p className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-muted-strong">
+              <CircleCheck className="h-3.5 w-3.5 text-success" />
+              Verification online
+            </p>
+            <p className="mt-1.5 text-[10.5px] leading-relaxed text-muted/80">
+              Every result is cross-checked against a brute-force reference.
+            </p>
           </div>
         </aside>
 
         <main className="min-w-0 flex-1">
-          <div className="sticky top-0 z-30 border-b border-border/70 glass">
-            <div className="flex h-16 items-center justify-between gap-4 px-4 md:px-6 lg:px-8">
-              <div className="flex min-w-0 items-center gap-3">
+          <div className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-md">
+            <div className="flex h-14 items-center justify-between gap-4 px-4 md:px-6 lg:px-8">
+              <div className="flex min-w-0 items-center gap-2.5">
                 <button
                   type="button"
                   onClick={() => navigate("overview")}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary-soft to-primary-deep lg:hidden"
+                  className="flex h-8 w-8 items-center justify-center rounded-md border border-border-strong bg-elevated lg:hidden"
                   aria-label="AlgoLab home"
                 >
-                  <Orbit className="h-4 w-4 text-white" />
+                  <SquareFunction className="h-4 w-4 text-primary-soft" />
                 </button>
-                <div className="hidden items-center gap-2 text-xs text-muted sm:flex">
-                  <span className="font-medium text-muted-strong">
-                    {meta.section}
-                  </span>
-                  <ChevronRight className="h-3 w-3" />
-                  <span className="font-medium text-foreground">
-                    {meta.title}
-                  </span>
+                <div className="hidden items-center gap-1.5 text-[11.5px] sm:flex">
+                  <span className="text-muted">{meta.section}</span>
+                  <ChevronRight className="h-3 w-3 text-muted/50" />
+                  <span className="font-medium text-foreground">{meta.title}</span>
                 </div>
-                <span className="text-sm font-semibold tracking-tight sm:hidden">
+                <span className="text-[13px] font-semibold tracking-tight sm:hidden">
                   {meta.title}
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
+                <span className="hidden font-mono text-[10px] tracking-tight text-muted/70 md:inline">
+                  react 19 · vite 8 · typescript
+                </span>
                 <Badge variant="success" className="hidden sm:inline-flex">
-                  <CircleDot className="h-3 w-3" />
+                  <CircleCheck className="h-3 w-3" />
                   Verified
-                </Badge>
-                <Badge variant="outline" className="hidden md:inline-flex">
-                  React 19
-                </Badge>
-                <Badge variant="outline" className="hidden md:inline-flex">
-                  Vite 8
-                </Badge>
-                <Badge variant="primary" className="hidden lg:inline-flex">
-                  TypeScript
                 </Badge>
               </div>
             </div>
 
-            <div className="flex gap-1 overflow-x-auto border-t border-border/60 px-4 py-2 lg:hidden">
+            <div className="flex gap-1 overflow-x-auto border-t border-border px-3 py-2 lg:hidden">
               {NAV.map((item) => {
                 const active = page === item.id
                 return (
@@ -204,10 +186,10 @@ function App() {
                     type="button"
                     onClick={() => navigate(item.id)}
                     className={cn(
-                      "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+                      "flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11.5px] font-medium transition-colors",
                       active
-                        ? "bg-primary/15 text-primary-soft"
-                        : "text-muted hover:bg-white/5 hover:text-foreground",
+                        ? "bg-elevated text-foreground"
+                        : "text-muted hover:bg-white/[0.03] hover:text-foreground",
                     )}
                   >
                     <item.icon className="h-3.5 w-3.5" />
@@ -218,20 +200,26 @@ function App() {
             </div>
           </div>
 
-          <div className="p-4 md:p-6 lg:p-8">
-            {page === "overview" ? <Overview onNavigate={navigate} /> : null}
-            {page === "closest-pair" ? <ClosestPairPage /> : null}
-            {page === "karatsuba" ? <KaratsubaPage /> : null}
+          <div className="px-4 py-6 md:px-6 md:py-8 lg:px-8">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={page}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {page === "overview" ? <Overview onNavigate={navigate} /> : null}
+                {page === "closest-pair" ? <ClosestPairPage /> : null}
+                {page === "karatsuba" ? <KaratsubaPage /> : null}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
-          <footer className="border-t border-border/60 px-4 py-6 md:px-6 lg:px-8">
-            <div className="flex flex-col items-start justify-between gap-2 text-[11px] text-muted sm:flex-row sm:items-center">
-              <p>
-                AlgoLab · Design &amp; Analysis of Algorithms workbench
-              </p>
-              <p className="font-mono text-muted/80">
-                closest pair · karatsuba · verified
-              </p>
+          <footer className="border-t border-border px-4 py-5 md:px-6 lg:px-8">
+            <div className="flex flex-col items-start justify-between gap-1.5 font-mono text-[10px] text-muted/70 sm:flex-row sm:items-center">
+              <p>AlgoLab · Design &amp; Analysis of Algorithms</p>
+              <p>closest-pair · karatsuba · verified</p>
             </div>
           </footer>
         </main>

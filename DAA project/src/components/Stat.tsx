@@ -3,27 +3,12 @@ import { cn } from "../lib/utils"
 
 type Tone = "primary" | "accent" | "success" | "warning" | "neutral"
 
-const toneClasses: Record<Tone, { icon: string; ring: string }> = {
-  primary: {
-    icon: "text-primary-soft",
-    ring: "bg-primary/10 ring-primary/20",
-  },
-  accent: {
-    icon: "text-accent-soft",
-    ring: "bg-accent/10 ring-accent/20",
-  },
-  success: {
-    icon: "text-success",
-    ring: "bg-success/10 ring-success/20",
-  },
-  warning: {
-    icon: "text-warning",
-    ring: "bg-warning/10 ring-warning/20",
-  },
-  neutral: {
-    icon: "text-muted-strong",
-    ring: "bg-white/5 ring-white/10",
-  },
+const toneClasses: Record<Tone, string> = {
+  primary: "text-primary-soft",
+  accent: "text-accent-soft",
+  success: "text-success",
+  warning: "text-warning",
+  neutral: "text-muted-strong",
 }
 
 interface StatProps {
@@ -43,33 +28,27 @@ export function Stat({
   tone = "primary",
   className,
 }: StatProps) {
-  const tones = toneClasses[tone]
   return (
     <div
       className={cn(
-        "rounded-xl border border-border/80 bg-surface/60 p-3.5",
+        "flex min-w-0 flex-col justify-between rounded-xl border border-border bg-surface/60 px-3.5 py-3",
         className,
       )}
     >
-      <div className="flex items-center gap-2">
-        <span
-          className={cn(
-            "flex h-7 w-7 items-center justify-center rounded-lg ring-1",
-            tones.ring,
-            tones.icon,
-          )}
-        >
-          <Icon className="h-3.5 w-3.5" strokeWidth={2} />
-        </span>
-        <span className="text-[11px] font-medium uppercase tracking-wider text-muted">
+      <div className="flex items-center gap-1.5">
+        <Icon
+          className={cn("h-3 w-3 shrink-0", toneClasses[tone])}
+          strokeWidth={2}
+        />
+        <span className="truncate font-mono text-[9.5px] uppercase tracking-[0.12em] text-muted">
           {label}
         </span>
       </div>
-      <p className="mt-2 truncate font-mono text-lg font-semibold tracking-tight text-foreground">
+      <p className="mt-2.5 truncate font-mono text-[15px] font-medium tabular-nums tracking-tight text-foreground">
         {value}
       </p>
       {hint ? (
-        <p className="mt-0.5 truncate text-[11px] text-muted">{hint}</p>
+        <p className="mt-0.5 truncate text-[10.5px] text-muted/80">{hint}</p>
       ) : null}
     </div>
   )

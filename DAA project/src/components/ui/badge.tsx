@@ -11,7 +11,7 @@ type BadgeVariant =
   | "outline"
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: "bg-white/5 text-muted-strong border-white/10",
+  default: "bg-white/[0.04] text-muted-strong border-border-strong",
   primary: "bg-primary/12 text-primary-soft border-primary/30",
   accent: "bg-accent/10 text-accent-soft border-accent/25",
   success: "bg-success/10 text-success border-success/25",
@@ -28,7 +28,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium tracking-tight whitespace-nowrap",
+        "inline-flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-tight whitespace-nowrap",
         variantClasses[variant],
         className,
       )}

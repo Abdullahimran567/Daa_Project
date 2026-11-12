@@ -2,7 +2,7 @@ import * as React from "react"
 import { cn } from "../../lib/utils"
 
 export const inputClasses =
-  "w-full rounded-xl border border-border-strong bg-surface/80 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted/60 transition-colors focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
+  "w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-[13px] text-foreground placeholder:text-muted/50 transition-colors focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
 
 export const Input = React.forwardRef<
   HTMLInputElement,
@@ -18,7 +18,11 @@ export const Textarea = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <textarea
     ref={ref}
-    className={cn(inputClasses, "resize-none font-mono text-xs leading-relaxed", className)}
+    className={cn(
+      inputClasses,
+      "resize-none font-mono text-xs leading-relaxed",
+      className,
+    )}
     {...props}
   />
 ))
@@ -31,7 +35,7 @@ export function Label({
   return (
     <label
       className={cn(
-        "mb-1.5 flex items-center gap-2 text-xs font-medium tracking-tight text-muted-strong",
+        "flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.1em] text-muted",
         className,
       )}
       {...props}

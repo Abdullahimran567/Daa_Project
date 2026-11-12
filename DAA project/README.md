@@ -1,75 +1,81 @@
-# React + TypeScript + Vite
+# AlgoLab — DAA Workbench
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An interactive workbench for two classic **divide-and-conquer** algorithms, built as a
+course project for *Design & Analysis of Algorithms*.
 
-Currently, two official plugins are available:
+| Algorithm | Complexity | Reference check |
+| --- | --- | --- |
+| Closest Pair of Points | Θ(n log n) | brute-force O(n²) |
+| Karatsuba Multiplication | Θ(n<sup>1.585</sup>) | schoolbook O(n²) |
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Every result produced by the UI is cross-checked against a brute-force / schoolbook
+reference before it is reported as verified.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the ESLint configuration
+- **Structured dry runs.** Both algorithms emit a typed event stream (`split`, `merge`,
+  `strip`, `check`, `z₂`, `z₀`, `z₁`, `combine`, …). The player replays that stream on a
+  `requestAnimationFrame` clock so the pace never drifts and pauses with the browser tab.
+- **Smooth geometry.** The split line, the strip corridor, the winning pair and the
+  distance readout are eased towards their new values instead of snapping, so the
+  visualisation reads as continuous motion rather than a slideshow.
+- **Condensed or exhaustive.** A run is condensed to ~72 discrete steps by default so a
+  full playthrough takes about a minute. Switch *Detail → every step* to walk the
+  complete trace instead.
+- **Verification.** Closest pair is compared against a brute-force scan; Karatsuba is
+  compared against a schoolbook multiplication, with operation counts and wall-clock
+  timings reported side by side.
+- **Self-contained.** The growth chart is hand-rolled SVG — no charting dependency.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+React 19 · TypeScript · Vite 8 · Tailwind CSS 4 · `motion` (animation) · lucide-react
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Getting started
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+npm run dev      # start the dev server
+npm run build    # type-check and build for production
+npm run preview  # serve the production build
+npm run lint     # eslint
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Project layout
 
 ```
+src/
+  App.tsx                 application shell, routing (hash based), navigation
+  ClosetPair.ts           closest-pair algorithm + traced event stream
+  Karatsuba.ts            karatsuba algorithm + traced event stream
+  Generate.ts             CLI harness: writes deterministic test inputs
+  Check.ts                CLI harness: re-runs every generated input and verifies it
+  components/
+    PointCanvas.tsx       point-cloud visualisation (eased geometry, magnifier inset)
+    KaratsubaBoard.tsx    operand ribbon and z₀/z₁/z₂ tiles
+    DryRunPanel.tsx       step readout + transport controls
+    PlayerControls.tsx    transport, scrubber, speed and detail controls
+    GrowthChart.tsx       SVG complexity chart
+    StepLog.tsx           clickable recursion trace
+    Stat.tsx, ui/*        shared primitives
+  hooks/
+    usePlayer.ts          rAF playback clock, stride/detail handling
+    useTween.ts           eased numeric transitions and text reveal
+  pages/                  Overview, ClosestPair, Karatsuba
+```
+
+### CLI harness
+
+`Generate.ts` writes ten increasing test cases per algorithm into `data/`; `Check.ts`
+replays them and prints `OK` / `WRONG` for each file. Both run against the same
+algorithm modules the UI uses.
+
+## Notes
+
+- The visible pair in the closest-pair canvas is the *best pair so far*: split events
+  do not carry a pair of their own, so the previous best is carried forward and eased
+  into place.
+- Wall-clock numbers favour the native `BigInt` backend for small operands — the
+  operation-count reduction is the meaningful comparison at these sizes.

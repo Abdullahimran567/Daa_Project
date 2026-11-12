@@ -17,22 +17,22 @@ interface StepLogProps {
 }
 
 const accentDots = {
-  primary: "bg-primary-soft shadow-[0_0_8px_rgba(167,139,250,0.9)]",
-  accent: "bg-accent-soft shadow-[0_0_8px_rgba(103,232,249,0.9)]",
+  primary: "bg-primary-soft",
+  accent: "bg-accent-soft",
 }
 
 const kindDots: Record<string, string> = {
   sort: "bg-muted-strong",
-  split: "bg-primary-soft shadow-[0_0_8px_rgba(167,139,250,0.8)]",
-  base: "bg-warning shadow-[0_0_8px_rgba(251,191,36,0.8)]",
-  merge: "bg-success shadow-[0_0_8px_rgba(52,211,153,0.8)]",
-  strip: "bg-accent shadow-[0_0_8px_rgba(34,211,238,0.8)]",
-  check: "bg-accent-soft shadow-[0_0_8px_rgba(103,232,249,0.8)]",
-  done: "bg-success shadow-[0_0_8px_rgba(52,211,153,0.8)]",
-  z2: "bg-primary-soft shadow-[0_0_8px_rgba(167,139,250,0.8)]",
-  z0: "bg-accent-soft shadow-[0_0_8px_rgba(103,232,249,0.8)]",
-  z1: "bg-warning shadow-[0_0_8px_rgba(251,191,36,0.8)]",
-  combine: "bg-success shadow-[0_0_8px_rgba(52,211,153,0.8)]",
+  split: "bg-primary-soft",
+  base: "bg-warning",
+  merge: "bg-success",
+  strip: "bg-warning",
+  check: "bg-accent-soft",
+  done: "bg-success",
+  z2: "bg-primary-soft",
+  z0: "bg-accent-soft",
+  z1: "bg-warning",
+  combine: "bg-success",
 }
 
 const MAX_RENDER = 400
@@ -78,16 +78,18 @@ export function StepLog({
     return (
       <div
         className={cn(
-          "flex h-full min-h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border-strong/80 bg-surface/40 p-6 text-center",
+          "flex h-full min-h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border-strong/70 bg-surface/40 p-6 text-center",
           className,
         )}
       >
         <div className="flex gap-1.5">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted/60" />
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted/40 [animation-delay:150ms]" />
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted/20 [animation-delay:300ms]" />
+          <span className="h-1 w-1 animate-pulse rounded-full bg-muted/50" />
+          <span className="h-1 w-1 animate-pulse rounded-full bg-muted/30 [animation-delay:150ms]" />
+          <span className="h-1 w-1 animate-pulse rounded-full bg-muted/20 [animation-delay:300ms]" />
         </div>
-        <p className="max-w-56 text-xs leading-relaxed text-muted">{emptyHint}</p>
+        <p className="max-w-56 text-[11.5px] leading-relaxed text-muted">
+          {emptyHint}
+        </p>
       </div>
     )
   }
@@ -96,17 +98,17 @@ export function StepLog({
     <div
       ref={containerRef}
       className={cn(
-        "relative max-h-[24rem] overflow-y-auto rounded-xl border border-border/80 bg-surface/50 p-2",
+        "relative max-h-[22rem] overflow-y-auto rounded-xl border border-border bg-surface/40 p-1.5",
         className,
       )}
     >
-      <ol className="space-y-0.5">
+      <ol className="space-y-px">
         {start > 0 ? (
           <li>
             <button
               type="button"
               onClick={() => onSelect?.(start - 1)}
-              className="w-full rounded-lg px-2 py-1.5 text-center text-[10px] text-muted transition-colors hover:bg-white/[0.03] hover:text-foreground"
+              className="w-full rounded-md px-2 py-1.5 text-center font-mono text-[10px] text-muted transition-colors hover:bg-white/[0.03] hover:text-foreground"
             >
               ↑ {start} earlier step{start === 1 ? "" : "s"}
             </button>
@@ -123,39 +125,40 @@ export function StepLog({
                 ref={isActive ? activeRef : undefined}
                 onClick={() => onSelect?.(index)}
                 className={cn(
-                  "group flex w-full items-start gap-2.5 rounded-lg py-1.5 pr-2 text-left transition-colors",
+                  "group relative flex w-full items-start gap-2 rounded-md py-1.5 pr-2 text-left transition-colors duration-200",
                   isActive
-                    ? "bg-primary/10 ring-1 ring-inset ring-primary/25"
-                    : "hover:bg-white/[0.03]",
+                    ? "bg-primary/10"
+                    : "hover:bg-white/[0.025]",
                 )}
-                style={{ paddingLeft: `${8 + Math.min(step.depth, 12) * 10}px` }}
+                style={{ paddingLeft: `${8 + Math.min(step.depth, 12) * 9}px` }}
               >
-                <span className="mt-0.5 flex w-5 shrink-0 justify-center">
+                {isActive ? (
+                  <span className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-primary" />
+                ) : null}
+                <span className="mt-[5px] flex w-3 shrink-0 justify-center">
                   <span
                     className={cn(
-                      "mt-1.5 h-1.5 w-1.5 rounded-full transition-transform",
+                      "h-1.5 w-1.5 rounded-full transition-transform duration-200",
                       kindDots[step.kind ?? ""] ?? accentDots[accent],
-                      isActive && "scale-150",
+                      isActive && "scale-125",
                     )}
                   />
                 </span>
                 <span
                   className={cn(
-                    "min-w-0 flex-1 font-mono text-[11px] leading-relaxed",
-                    isActive ? "text-foreground" : "text-muted-strong",
+                    "min-w-0 flex-1 font-mono text-[10.5px] leading-relaxed transition-colors",
+                    isActive ? "text-foreground" : "text-muted",
                   )}
                 >
                   {step.text}
                 </span>
                 <span
                   className={cn(
-                    "shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[10px]",
-                    isActive
-                      ? "bg-primary/15 text-primary-soft"
-                      : "bg-white/5 text-muted",
+                    "shrink-0 font-mono text-[9px] tabular-nums transition-colors",
+                    isActive ? "text-primary-soft" : "text-muted/50",
                   )}
                 >
-                  d{step.depth}
+                  {step.depth}
                 </span>
               </button>
             </li>
@@ -167,7 +170,7 @@ export function StepLog({
             <button
               type="button"
               onClick={() => onSelect?.(end)}
-              className="w-full rounded-lg px-2 py-1.5 text-center text-[10px] text-muted transition-colors hover:bg-white/[0.03] hover:text-foreground"
+              className="w-full rounded-md px-2 py-1.5 text-center font-mono text-[10px] text-muted transition-colors hover:bg-white/[0.03] hover:text-foreground"
             >
               ↓ {steps.length - end} more step{steps.length - end === 1 ? "" : "s"}
             </button>
