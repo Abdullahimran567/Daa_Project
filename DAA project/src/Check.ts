@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
-import { closestPair, closestPairBrute, parsePoints } from "../src/closestPair";
-import { karatsuba, parseNumbers } from "../src/karatsuba";
+import { closestPair, closestPairBrute, parsePoints } from "./ClosetPair";
+import { karatsuba, parseNumbers } from "./Karatsuba";
 
 const cpDir = path.join("data", "closest_pair");
 for (const f of fs.readdirSync(cpDir).sort()) {
