@@ -3,45 +3,30 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     sans-serif;
-  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas,
     monospace;
 
-  /* Deep-space observatory surfaces. */
-  --color-background: #05070e;
-  --color-surface: #080b14;
-  --color-card: #0b0f1a;
-  --color-elevated: #121726;
-  --color-border: #1a2134;
-  --color-border-strong: #28324c;
+  /* Neutral graphite surfaces — no tinted "AI" glow. */
+  --color-background: #090a0c;
+  --color-surface: #0d0e11;
+  --color-card: #111216;
+  --color-elevated: #16181d;
+  --color-border: #1e2026;
+  --color-border-strong: #2a2d35;
 
-  --color-foreground: #e8ecf6;
-  --color-muted: #838da6;
-  --color-muted-strong: #aab3c9;
+  --color-foreground: #e7e9ee;
+  --color-muted: #868b96;
+  --color-muted-strong: #b0b5c0;
 
-  /* Aurora accents. */
-  --color-primary: #4d8dff;
-  --color-primary-soft: #8fb6ff;
-  --color-primary-deep: #2c5fc4;
-  --color-accent: #22d3b6;
-  --color-accent-soft: #5ff0d8;
-  --color-violet: #a855f7;
-  --color-violet-soft: #c89bff;
-  --color-success: #34d399;
-  --color-warning: #fbbf24;
-  --color-danger: #fb7185;
-
-  /* Deeper void tones used by the WebGL stages. */
-  --color-void: #03050c;
-  --color-ink: #010208;
-  --color-rose: #ff5fa2;
-  --color-rose-soft: #ffa3c8;
-  --color-amber: #ffb347;
-
-  /* Aurora ramp — the three-stop gradient that travels across the UI. */
-  --color-aurora-1: #4d8dff;
-  --color-aurora-2: #5ff0d8;
-  --color-aurora-3: #a855f7;
+  /* Single precise accent + semantic colours. */
+  --color-primary: #4b87f0;
+  --color-primary-soft: #7ea9f5;
+  --color-primary-deep: #2f62c4;
+  --color-accent: #21b8a8;
+  --color-accent-soft: #56d3c5;
+  --color-success: #35c07f;
+  --color-warning: #e0a33a;
+  --color-danger: #e5646e;
 }
 
 @layer base {
@@ -66,11 +51,10 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "cv02", "cv03", "cv04", "ss01";
-    overflow-x: hidden;
   }
 
   ::selection {
-    background: rgba(77, 141, 255, 0.32);
+    background: rgba(75, 135, 240, 0.28);
     color: #fff;
   }
 
@@ -82,8 +66,8 @@
   }
 
   :focus-visible {
-    outline: 2px solid rgba(143, 182, 255, 0.75);
-    outline-offset: 3px;
+    outline: 2px solid rgba(126, 169, 245, 0.7);
+    outline-offset: 2px;
   }
 
   ::-webkit-scrollbar {
@@ -94,147 +78,27 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1e2639;
+    background: #23262e;
     border: 2px solid transparent;
     background-clip: padding-box;
     border-radius: 999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #2d3854;
+    background: #333743;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
 }
 
-/* ------------------------------------------------------------------ *
- * Glass surfaces — layered translucency over the live WebGL field.
- * ------------------------------------------------------------------ */
-
-@utility glass {
-  background:
-    linear-gradient(
-      160deg,
-      rgba(255, 255, 255, 0.055) 0%,
-      rgba(255, 255, 255, 0.018) 34%,
-      rgba(255, 255, 255, 0.005) 100%
-    ),
-    rgba(8, 11, 20, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.075);
-  backdrop-filter: blur(22px) saturate(150%);
-  -webkit-backdrop-filter: blur(22px) saturate(150%);
-  box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
-    0 30px 70px -40px rgba(0, 0, 0, 0.95);
-}
-
-@utility glass-soft {
-  background:
-    linear-gradient(
-      160deg,
-      rgba(255, 255, 255, 0.035) 0%,
-      rgba(255, 255, 255, 0.01) 100%
-    ),
-    rgba(9, 12, 22, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.055);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-}
-
-@utility glass-hover {
-  transition:
-    border-color 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-    background 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@utility glow-primary {
-  box-shadow:
-    0 0 0 1px rgba(77, 141, 255, 0.28),
-    0 0 28px -6px rgba(77, 141, 255, 0.45),
-    0 18px 44px -26px rgba(0, 0, 0, 0.95);
-}
-
-@utility glow-accent {
-  box-shadow:
-    0 0 0 1px rgba(34, 211, 182, 0.28),
-    0 0 28px -6px rgba(34, 211, 182, 0.42),
-    0 18px 44px -26px rgba(0, 0, 0, 0.95);
-}
-
-/* A hairline of aurora light along the top edge of a panel. */
-@utility edge-light {
-  position: relative;
-  overflow: hidden;
-}
-
-@utility edge-light-before {
-  content: "";
-  position: absolute;
-  inset-inline: 12%;
-  top: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(143, 182, 255, 0.75),
-    rgba(95, 240, 216, 0.55),
-    transparent
-  );
-  pointer-events: none;
-}
-
-/* ------------------------------------------------------------------ *
- * Type treatments
- * ------------------------------------------------------------------ */
-
-@utility text-aurora {
-  background: linear-gradient(
-    100deg,
-    #ffffff 0%,
-    #cfe0ff 26%,
-    #8fb6ff 46%,
-    #5ff0d8 70%,
-    #ffffff 100%
-  );
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: aurora-pan 9s ease-in-out infinite;
-}
-
-@utility font-display {
-  font-family: var(--font-display);
-  letter-spacing: -0.03em;
-}
-
-@utility eyebrow {
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  line-height: 1;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-
-/* ------------------------------------------------------------------ *
- * Ambient textures
- * ------------------------------------------------------------------ */
-
 @utility bg-grid {
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
-@utility bg-dots {
-  background-image: radial-gradient(
-    rgba(255, 255, 255, 0.055) 1px,
-    transparent 1px
-  );
-  background-size: 22px 22px;
+@utility hairline-top {
+  border-top: 1px solid var(--color-border);
 }
 
 @utility panel {
@@ -244,26 +108,22 @@
 
 @utility shadow-panel {
   box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.035) inset,
+    0 1px 0 0 rgba(255, 255, 255, 0.025) inset,
     0 12px 32px -24px rgba(0, 0, 0, 0.9);
 }
 
 @utility shadow-pop {
   box-shadow:
-    0 0 0 1px rgba(77, 141, 255, 0.2),
+    0 0 0 1px rgba(75, 135, 240, 0.18),
     0 18px 44px -26px rgba(0, 0, 0, 0.95);
 }
 
-/* ------------------------------------------------------------------ *
- * Motion primitives
- * ------------------------------------------------------------------ */
-
 @utility animate-rise {
-  animation: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @utility animate-fade-in {
-  animation: fade-in 0.45s ease-out both;
+  animation: fade-in 0.32s ease-out both;
 }
 
 @utility animate-march {
@@ -278,45 +138,10 @@
   animation: sweep 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
-@utility animate-float {
-  animation: float 7s ease-in-out infinite;
-}
-
-@utility animate-drift {
-  animation: drift 22s linear infinite;
-}
-
-@utility animate-shimmer {
-  animation: shimmer 2.6s linear infinite;
-}
-
-@utility animate-spin-slow {
-  animation: spin 26s linear infinite;
-}
-
-@utility animate-scan {
-  animation: scan 5.4s cubic-bezier(0.55, 0, 0.45, 1) infinite;
-}
-
-@utility animate-lockon {
-  animation: lockon 5.4s ease-in-out infinite;
-}
-
-@utility animate-grow-edge {
-  animation: grow-edge 4.6s ease-out infinite;
-  transform-origin: center;
-}
-
-@utility animate-grow-node {
-  animation: grow-node 4.6s ease-out infinite;
-  transform-origin: center;
-  transform-box: fill-box;
-}
-
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -327,7 +152,7 @@
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -365,130 +190,6 @@
   }
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(0, -14px, 0);
-  }
-}
-
-@keyframes drift {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-  50% {
-    transform: translate3d(40px, -26px, 0) rotate(6deg);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -160% 0;
-  }
-  100% {
-    background-position: 260% 0;
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes aurora-pan {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-@keyframes scan {
-  0% {
-    transform: translateX(14px);
-    opacity: 0;
-  }
-  8% {
-    opacity: 1;
-  }
-  88% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(306px);
-    opacity: 0;
-  }
-}
-
-@keyframes lockon {
-  0%,
-  48% {
-    opacity: 0;
-    transform: scale(0.82);
-  }
-  62% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  92% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.06);
-  }
-}
-
-@keyframes grow-edge {
-  0%,
-  4% {
-    opacity: 0;
-    transform: scaleY(0);
-  }
-  16% {
-    opacity: 1;
-    transform: scaleY(1);
-  }
-  84% {
-    opacity: 1;
-    transform: scaleY(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scaleY(1);
-  }
-}
-
-@keyframes grow-node {
-  0%,
-  6% {
-    opacity: 0;
-    transform: scale(0.2);
-  }
-  20% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  86% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.7);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -499,467 +200,3 @@
     scroll-behavior: auto !important;
   }
 }
-
-/* ================================================================== *
- *  HOLO LAYER — the visual language of the redesign.
- *  Translucent instrument panels, cut corners, scanning light,
- *  film grain and specular sheen.
- * ================================================================== */
-
-/* Film grain that sits above everything without stealing pointer events. */
-@utility grain {
-  position: relative;
-}
-
-@utility grain-layer {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  mix-blend-mode: overlay;
-}
-
-/* A panel with a conic-gradient light rim — the "instrument" look. */
-@utility holo-rim {
-  position: relative;
-  isolation: isolate;
-}
-
-@utility holo-rim-before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: conic-gradient(
-    from var(--holo-angle, 0deg),
-    rgba(143, 182, 255, 0.9),
-    rgba(95, 240, 216, 0.55),
-    rgba(168, 85, 247, 0.75),
-    rgba(143, 182, 255, 0.9)
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  opacity: 0.55;
-  pointer-events: none;
-  z-index: 1;
-  animation: holo-spin 9s linear infinite;
-}
-
-/* Corner brackets drawn with gradients on a pseudo element. */
-@utility brackets {
-  position: relative;
-}
-
-@utility brackets-before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(to right, var(--bracket, rgba(143, 182, 255, 0.75)) 0 12px)
-      0 0 / 1px 12px no-repeat,
-    linear-gradient(to bottom, var(--bracket, rgba(143, 182, 255, 0.75)) 0 12px)
-      0 0 / 12px 1px no-repeat,
-    linear-gradient(to left, var(--bracket, rgba(143, 182, 255, 0.75)) 0 12px)
-      100% 0 / 1px 12px no-repeat,
-    linear-gradient(to bottom, var(--bracket, rgba(143, 182, 255, 0.75)) 0 12px)
-      100% 0 / 12px 1px no-repeat,
-    linear-gradient(to right, var(--bracket, rgba(143, 182, 255, 0.75)) 0 12px)
-      0 100% / 1px 12px no-repeat,
-    linear-gradient(to top, var(--bracket, rgba(143, 182, 255, 0.75)) 0 12px)
-      0 100% / 12px 1px no-repeat,
-    linear-gradient(to left, var(--bracket, rgba(143, 182, 255, 0.75)) 0 12px)
-      100% 100% / 1px 12px no-repeat,
-    linear-gradient(to top, var(--bracket, rgba(143, 182, 255, 0.75)) 0 12px)
-      100% 100% / 12px 1px no-repeat;
-}
-
-/* A sweeping highlight that crosses the surface on hover. */
-@utility sheen {
-  position: relative;
-  overflow: hidden;
-}
-
-@utility sheen-after {
-  content: "";
-  position: absolute;
-  top: -60%;
-  left: -140%;
-  width: 55%;
-  height: 220%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.085),
-    transparent
-  );
-  transform: rotate(18deg);
-  pointer-events: none;
-  animation: sheen-slide 7.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-/* A hairline of light that travels down the panel on a loop. */
-@utility scanline {
-  position: relative;
-  overflow: hidden;
-}
-
-@utility scanline-after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: -30%;
-  height: 30%;
-  background: linear-gradient(
-    180deg,
-    transparent,
-    rgba(143, 182, 255, 0.07),
-    transparent
-  );
-  pointer-events: none;
-  animation: scan-down 6.5s linear infinite;
-}
-
-/* Cut a corner off a panel — the classic HUD silhouette. */
-@utility cut-corner {
-  clip-path: polygon(
-    0 0,
-    calc(100% - 14px) 0,
-    100% 14px,
-    100% 100%,
-    14px 100%,
-    0 calc(100% - 14px)
-  );
-}
-
-@utility cut-corner-sm {
-  clip-path: polygon(
-    0 0,
-    calc(100% - 9px) 0,
-    100% 9px,
-    100% 100%,
-    9px 100%,
-    0 calc(100% - 9px)
-  );
-}
-
-/* Perspective grid used behind sections. */
-@utility bg-grid-fade {
-  background-image:
-    linear-gradient(to right, rgba(143, 182, 255, 0.055) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(143, 182, 255, 0.055) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(120% 90% at 50% 0%, #000 5%, transparent 72%);
-  -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 5%, transparent 72%);
-}
-
-/* Shimmering text for numbers and labels. */
-@utility text-shimmer {
-  background: linear-gradient(
-    100deg,
-    rgba(255, 255, 255, 0.72) 0%,
-    #ffffff 38%,
-    rgba(255, 255, 255, 0.72) 62%
-  );
-  background-size: 240% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: shimmer 4.2s linear infinite;
-}
-
-/* Horizontal ticker used for the live algorithm log. */
-@utility marquee-track {
-  display: flex;
-  width: max-content;
-  animation: marquee-x 38s linear infinite;
-}
-
-@utility animate-marquee {
-  animation: marquee-x 38s linear infinite;
-}
-
-@utility animate-flicker {
-  animation: flicker 4.2s ease-in-out infinite;
-}
-
-@utility animate-beam {
-  animation: beam 2.8s ease-in-out infinite;
-}
-
-@utility animate-float-slow {
-  animation: float-slow 9s ease-in-out infinite;
-}
-
-@utility animate-drift-soft {
-  animation: drift-soft 28s linear infinite;
-}
-
-@utility animate-spin-rev {
-  animation: spin-rev 34s linear infinite;
-}
-
-@keyframes holo-spin {
-  to {
-    --holo-angle: 360deg;
-  }
-}
-
-@property --holo-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
-@keyframes scan-down {
-  0% {
-    transform: translateY(-120%);
-  }
-  100% {
-    transform: translateY(420%);
-  }
-}
-
-@keyframes sheen-slide {
-  0%,
-  58% {
-    left: -140%;
-  }
-  100% {
-    left: 150%;
-  }
-}
-
-@keyframes marquee-x {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(-50%, 0, 0);
-  }
-}
-
-@keyframes flicker {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  42% {
-    opacity: 1;
-  }
-  44% {
-    opacity: 0.42;
-  }
-  46% {
-    opacity: 1;
-  }
-  70% {
-    opacity: 1;
-  }
-  72% {
-    opacity: 0.65;
-  }
-  74% {
-    opacity: 1;
-  }
-}
-
-@keyframes beam {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: scaleX(0.82);
-  }
-  50% {
-    opacity: 1;
-    transform: scaleX(1);
-  }
-}
-
-@keyframes float-slow {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(0, -18px, 0);
-  }
-}
-
-@keyframes drift-soft {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-  50% {
-    transform: translate3d(-70px, 34px, 0) rotate(-3deg);
-  }
-  100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-}
-
-@keyframes spin-rev {
-  to {
-    transform: rotate(-360deg);
-  }
-}
-
-/* ================================================================== *
- *  SPOTLIGHT — a pointer-tracked pool of light.
- *  The `--mx` / `--my` custom properties are written from JavaScript;
- *  the utilities below turn them into a radial pool and a lit rim.
- * ================================================================== */
-
-@utility spotlight {
-  position: relative;
-  isolation: isolate;
-}
-
-/* The light pool itself. */
-@utility spotlight-layer {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--spot-gradient);
-  opacity: var(--spot-opacity, 0);
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* The same pool, but painted over the content instead of under it. */
-@utility spotlight-layer-top {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--spot-gradient);
-  opacity: var(--spot-opacity, 0);
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
-  z-index: 3;
-  mix-blend-mode: screen;
-}
-
-/* A one-pixel rim that lights up where the pointer is. */
-@utility spotlight-rim {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: radial-gradient(
-    var(--spot-size, 320px) circle at var(--mx, 50%) var(--my, 50%),
-    color-mix(in srgb, var(--spot-color, #4d8dff) 90%, transparent) 0%,
-    transparent 68%
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  opacity: var(--spot-opacity, 0);
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
-  z-index: 3;
-}
-
-/* A soft bloom that pulses from the centre of a surface. */
-@utility halo {
-  position: relative;
-  isolation: isolate;
-}
-
-@utility halo-before {
-  content: "";
-  position: absolute;
-  inset: -30%;
-  border-radius: inherit;
-  background: radial-gradient(
-    60% 60% at 50% 50%,
-    color-mix(in srgb, var(--halo-color, #4d8dff) 30%, transparent),
-    transparent 70%
-  );
-  opacity: var(--halo-opacity, 0.35);
-  filter: blur(18px);
-  pointer-events: none;
-  z-index: 0;
-  animation: halo-breathe 5.2s ease-in-out infinite;
-}
-
-/* Fades a horizontal strip of content out at both ends. */
-@utility mask-fade-x {
-  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 6%,
-    #000 94%,
-    transparent
-  );
-}
-
-/* A slowly sweeping conic highlight for large hero surfaces. */
-@utility aurora-sweep {
-  position: relative;
-  overflow: hidden;
-}
-
-@utility aurora-sweep-before {
-  content: "";
-  position: absolute;
-  inset: -40%;
-  background: conic-gradient(
-    from var(--holo-angle, 0deg),
-    transparent 0deg,
-    color-mix(in srgb, var(--color-aurora-1) 22%, transparent) 60deg,
-    transparent 140deg,
-    color-mix(in srgb, var(--color-aurora-3) 18%, transparent) 220deg,
-    transparent 320deg
-  );
-  filter: blur(40px);
-  opacity: 0.5;
-  pointer-events: none;
-  animation: holo-spin 24s linear infinite;
-}
-
-@keyframes halo-breathe {
-  0%,
-  100% {
-    opacity: calc(var(--halo-opacity, 0.35) * 0.55);
-    transform: scale(0.96);
-  }
-  50% {
-    opacity: var(--halo-opacity, 0.35);
-    transform: scale(1.06);
-  }
-}
-
-@utility animate-halo {
-  animation: halo-breathe 5.2s ease-in-out infinite;
-}
-
-@utility animate-ticker-blink {
-  animation: ticker-blink 1.6s steps(2, jump-none) infinite;
-}
-
-@keyframes ticker-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
-  }
-}
-

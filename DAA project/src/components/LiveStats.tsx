@@ -1,11 +1,11 @@
 import { Crosshair, Ruler } from "lucide-react"
-import type { TracePair } from "../ClosetPair"
+import type { TracePairView } from "./PointCanvas"
 import { Stat } from "./Stat"
 import { useTween } from "../hooks/useTween"
 import { formatDistance } from "../lib/utils"
 
 interface LiveStatsProps {
-  best: TracePair | null
+  best: TracePairView | null
   transitionMs: number
 }
 

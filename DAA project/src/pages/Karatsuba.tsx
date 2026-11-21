@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import {
   AlertTriangle,
@@ -13,30 +13,33 @@ import {
   Hash,
   Layers,
   Loader2,
-  Orbit,
   Play,
   Sigma,
   Timer,
   Zap,
 } from "lucide-react"
 import {
-  activeNodeAt,
   karatsubaTraced,
   type KaratsubaTraceResult,
   type KaratsubaTraceStep,
 } from "../Karatsuba"
 import { Badge } from "../components/ui/badge"
 import { Button } from "../components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card"
 import { Label, Textarea } from "../components/ui/input"
 import { DryRunPanel } from "../components/DryRunPanel"
 import { KaratsubaBoard } from "../components/KaratsubaBoard"
 import { Stat } from "../components/Stat"
 import { StepLog } from "../components/StepLog"
-import { HoloPanel, HudChip } from "../components/Holo"
 import { DEFAULT_SPEED, usePlayer } from "../hooks/usePlayer"
 import { useRevealText } from "../hooks/useTween"
 import { cn, formatMs, formatNumber, shorten } from "../lib/utils"
-import { RecursionLattice } from "../three/RecursionLattice"
 
 function randomBig(digits: number): string {
   let value = String(1 + Math.floor(Math.random() * 9))
@@ -175,57 +178,6 @@ export function KaratsubaPage() {
     [trace],
   )
 
-  // Deep link support: /?autoplay=1 launches the multiplication immediately.
-  const startedRef = useRef(false)
-  useEffect(() => {
-    if (startedRef.current) return
-    if (!window.location.search.includes("autoplay")) return
-    startedRef.current = true
-    const target = Number(new URLSearchParams(window.location.search).get("step"))
-    window.setTimeout(() => {
-      run()
-      if (Number.isFinite(target) && target > 0) {
-        window.setTimeout(() => seek(target), 500)
-      }
-    }, 240)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const nodes = useMemo(() => result?.tree ?? [], [result])
-  const roots = useMemo(() => result?.roots ?? [], [result])
-  const activeNode = useMemo(
-    () => (nodes.length > 0 ? activeNodeAt(nodes, player.index) : null),
-    [nodes, player.index],
-  )
-  const baseNodes = useMemo(
-    () => nodes.filter((node) => node.kind === "base").length,
-    [nodes],
-  )
-
-  // A dormant preview cone so the stage is never an empty box.
-  const preview = useMemo(() => {
-    const a = BigInt("1234567890123456")
-    const b = BigInt("9876543210987654")
-    const traced = karatsubaTraced(a, b)
-    return { tree: traced.tree, roots: traced.roots }
-  }, [])
-
-  const latticeNodes = nodes.length > 0 ? nodes : preview.tree
-  const latticeRoots = nodes.length > 0 ? roots : preview.roots
-  const dormant = nodes.length === 0
-
-  // How much of the cone has been grown so far.
-  const growth = useMemo(() => {
-    const reached = latticeNodes.filter(
-      (node) => node.start <= player.index,
-    ).length
-    const leaves = latticeNodes.filter(
-      (node) => node.kind === "base" && node.start <= player.index,
-    ).length
-    const levels = latticeNodes.reduce((acc, node) => Math.max(acc, node.depth), 0) + 1
-    return { reached, leaves, levels }
-  }, [latticeNodes, player.index])
-
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -238,13 +190,12 @@ export function KaratsubaPage() {
             <Badge variant="outline">O(n¹·⁵⁸⁵)</Badge>
             <Badge variant="outline">Big integers</Badge>
           </div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight md:text-[1.75rem]">
+          <h1 className="text-2xl font-semibold tracking-tight md:text-[1.75rem]">
             Karatsuba Multiplication
           </h1>
           <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted">
-            Multiply arbitrarily large integers and watch the recursion cone
-            ignite node by node as every split, sub-product and recombination
-            happens.
+            Multiply arbitrarily large integers, then replay every split,
+            sub-product and recombination as a visual dry run.
           </p>
         </div>
         <Button
@@ -269,139 +220,20 @@ export function KaratsubaPage() {
         </div>
       ) : null}
 
-      {/* ---------------------------------------------------------- *
-       * The recursion cone
-       * ---------------------------------------------------------- */}
-      <HoloPanel className="overflow-hidden" bracket="rgba(95,240,216,0.4)">
-        <div className="flex flex-wrap items-center justify-between gap-3 px-5 pb-3 pt-4">
-          <div>
-            <h2 className="font-display flex items-center gap-2 text-[13px] font-semibold tracking-tight text-foreground">
-              <GitBranch className="h-3.5 w-3.5 text-accent-soft" />
-              Recursion cone
-            </h2>
-            <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
-              {isLive
-                ? "Each level branches into three — the cone is the 3ᵈ explosion made visible."
-                : "Press Multiply to grow the cone. Drag to orbit the lattice."}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <HudChip tone="accent">
-              {formatNumber(latticeNodes.length)} nodes
-            </HudChip>
-            <HudChip tone="primary">
-              {formatNumber(baseNodes || latticeNodes.filter((n) => n.kind === "base").length)}{" "}
-              leaves
-            </HudChip>
-          </div>
-        </div>
-
-        <div className="relative h-[300px] w-full overflow-hidden border-y border-white/[0.07] bg-[radial-gradient(120%_100%_at_50%_0%,#07121a,#03050c)] sm:h-[380px] lg:h-[440px]">
-          <RecursionLattice
-            nodes={latticeNodes}
-            roots={latticeRoots}
-            stepIndex={player.index}
-            accent="accent"
-            className="absolute inset-0"
-          />
-
-          {dormant ? (
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
-              <Binary className="h-6 w-6 text-muted/40" />
-              <p className="text-[11.5px] text-muted">
-                A dormant cone from a 16-digit multiplication.
-                <br />
-                Press Multiply to grow the real one.
-              </p>
-            </div>
-          ) : null}
-
-          <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap items-center gap-2">
-            {activeNode ? (
-              <span className="rounded-md border border-accent/30 bg-[#05070e]/90 px-2 py-1 font-mono text-[9.5px] text-accent-soft backdrop-blur">
-                active · depth {activeNode.depth} · {activeNode.n}d
-              </span>
-            ) : null}
-            {step ? (
-              <span className="rounded-md border border-border-strong bg-[#05070e]/90 px-2 py-1 backdrop-blur">
-                <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-primary-soft">
-                  {step.type}
-                </span>
-              </span>
-            ) : null}
-          </div>
-
-          {/* Cone HUD */}
-          <div className="pointer-events-none absolute right-3 top-3 hidden w-44 flex-col gap-1.5 rounded-lg border border-white/10 bg-[#05070e]/82 px-3 py-2.5 backdrop-blur-md md:flex">
-            <p className="font-mono text-[8.5px] uppercase tracking-[0.18em] text-muted">
-              recursion cone
-            </p>
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
-                branch
-              </span>
-              <span className="font-mono text-[11px] tabular-nums text-accent-soft">
-                3
-              </span>
-            </div>
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
-                levels
-              </span>
-              <span className="font-mono text-[11px] tabular-nums text-foreground">
-                {growth.levels}
-              </span>
-            </div>
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
-                nodes grown
-              </span>
-              <span className="font-mono text-[11px] tabular-nums text-foreground">
-                {formatNumber(growth.reached)}
-              </span>
-            </div>
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
-                base products
-              </span>
-              <span className="font-mono text-[11px] tabular-nums text-accent-soft">
-                {formatNumber(growth.leaves)}
-              </span>
-            </div>
-            <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/[0.07]">
-              <div
-                className="h-full rounded-full bg-[linear-gradient(90deg,#4d8dff,#5ff0d8)] transition-all duration-300"
-                style={{
-                  width: `${
-                    latticeNodes.length > 0
-                      ? Math.min(100, (growth.reached / latticeNodes.length) * 100)
-                      : 0
-                  }%`,
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md border border-white/10 bg-[#05070e]/80 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-muted backdrop-blur">
-            <Orbit className="h-3 w-3" />
-            drag to orbit
-          </div>
-        </div>
-      </HoloPanel>
-
       <div className="grid gap-4 xl:grid-cols-[1.55fr_1fr]">
         <div className="space-y-4">
-          <HoloPanel bracket="rgba(143,182,255,0.3)">
-            <div className="px-5 pb-5 pt-4">
-              <h3 className="font-display flex items-center gap-2 text-[13px] font-semibold tracking-tight">
+          <Card>
+            <CardHeader>
+              <CardTitle>
                 <Calculator className="h-3.5 w-3.5 text-primary-soft" />
                 Operands
-              </h3>
-              <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
+              </CardTitle>
+              <CardDescription>
                 Digits only — leading zeros are ignored by the parser.
-              </p>
-
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <div className="mb-1.5 flex items-center justify-between">
                     <Label htmlFor="operand-a" className="mb-0">
@@ -464,7 +296,7 @@ export function KaratsubaPage() {
                 </div>
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-white/[0.07] pt-3">
+              <div className="flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
                 <span className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-muted">
                   Quick sizes
                 </span>
@@ -479,8 +311,8 @@ export function KaratsubaPage() {
                   </button>
                 ))}
               </div>
-            </div>
-          </HoloPanel>
+            </CardContent>
+          </Card>
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Stat
@@ -493,7 +325,9 @@ export function KaratsubaPage() {
                     : "…"
                   : "—"
               }
-              hint={result && !finished ? "Reveal at the end" : "Final length"}
+              hint={
+                result && !finished ? "Reveal at the end" : "Final length"
+              }
               tone="primary"
             />
             <Stat
@@ -506,7 +340,9 @@ export function KaratsubaPage() {
                     : "…"
                   : "—"
               }
-              hint={result && !finished ? "Reveal at the end" : "Single-digit ops"}
+              hint={
+                result && !finished ? "Reveal at the end" : "Single-digit ops"
+              }
               tone="accent"
             />
             <Stat
@@ -528,7 +364,9 @@ export function KaratsubaPage() {
                     : "…"
                   : "—"
               }
-              hint={result && !finished ? "Complete the run" : "vs. schoolbook"}
+              hint={
+                result && !finished ? "Complete the run" : "vs. schoolbook"
+              }
               tone={
                 result && finished
                   ? verified
@@ -539,66 +377,64 @@ export function KaratsubaPage() {
             />
           </div>
 
-          <HoloPanel bracket="rgba(95,240,216,0.3)">
-            <div className="px-5 pb-5 pt-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-display flex items-center gap-2 text-[13px] font-semibold tracking-tight">
-                    <Equal className="h-3.5 w-3.5 text-accent-soft" />
-                    Product
-                  </h3>
-                  <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
-                    {displayProduct !== undefined
-                      ? `${displayProduct.toString().length} digits · current dry-run value`
-                      : "Advance the dry run to reveal the product."}
+          <Card>
+            <CardHeader className="flex-row items-start justify-between gap-3">
+              <div>
+                <CardTitle>
+                  <Equal className="h-3.5 w-3.5 text-accent-soft" />
+                  Product
+                </CardTitle>
+                <CardDescription>
+                  {displayProduct !== undefined
+                    ? `${displayProduct.toString().length} digits · current dry-run value`
+                    : "Advance the dry run to reveal the product."}
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={copyProduct}
+                disabled={displayProduct === undefined}
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-success" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+                {copied ? "Copied" : "Copy"}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {displayProduct !== undefined ? (
+                <div className="max-h-52 overflow-auto rounded-lg border border-border bg-surface/60 p-3.5">
+                  <p className="break-all font-mono text-[11.5px] leading-relaxed text-foreground">
+                    {revealedProduct}
+                    <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 bg-primary/70 animate-pulse" />
                   </p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={copyProduct}
-                  disabled={displayProduct === undefined}
-                >
-                  {copied ? (
-                    <Check className="h-3.5 w-3.5 text-success" />
-                  ) : (
-                    <Copy className="h-3.5 w-3.5" />
-                  )}
-                  {copied ? "Copied" : "Copy"}
-                </Button>
-              </div>
+              ) : (
+                <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border-strong/70 bg-surface/40">
+                  <p className="text-[11.5px] text-muted">
+                    The product appears as the recursion unwinds.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-              <div className="mt-4">
-                {displayProduct !== undefined ? (
-                  <div className="max-h-52 overflow-auto rounded-lg border border-white/[0.08] bg-white/[0.02] p-3.5">
-                    <p className="break-all font-mono text-[11.5px] leading-relaxed text-foreground">
-                      {revealedProduct}
-                      <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 bg-primary/70 animate-pulse" />
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border-strong/70 bg-white/[0.015]">
-                    <p className="text-[11.5px] text-muted">
-                      The product appears as the recursion unwinds.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </HoloPanel>
-
-          <HoloPanel bracket="rgba(95,240,216,0.3)">
-            <div className="px-5 pb-5 pt-4">
-              <h3 className="font-display flex items-center gap-2 text-[13px] font-semibold tracking-tight">
+          <Card>
+            <CardHeader>
+              <CardTitle>
                 <Timer className="h-3.5 w-3.5 text-accent-soft" />
                 Performance
-              </h3>
-              <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
+              </CardTitle>
+              <CardDescription>
                 Karatsuba against a schoolbook reference on the same input.
-              </p>
-
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               {timing ? (
-                <div className="mt-4 space-y-3.5">
+                <div className="space-y-3.5">
                   <Bar
                     label="Karatsuba"
                     value={timing.karatsuba}
@@ -611,7 +447,7 @@ export function KaratsubaPage() {
                     max={maxTime}
                     color="bg-danger/80"
                   />
-                  <div className="grid grid-cols-2 gap-3 border-t border-white/[0.07] pt-3">
+                  <div className="grid grid-cols-2 gap-3 border-t border-border pt-3">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-[11px] text-muted">Wall clock</span>
                       <Badge
@@ -633,79 +469,75 @@ export function KaratsubaPage() {
                     </div>
                   </div>
                   <p className="text-[10.5px] leading-relaxed text-muted/80">
-                    Operation counts favour Karatsuba; wall-clock time depends
-                    on the native BigInt backend, which is already highly
-                    optimised for small inputs.
+                    Operation counts favour Karatsuba; wall-clock time depends on
+                    the native BigInt backend, which is already highly optimised
+                    for small inputs.
                   </p>
                 </div>
               ) : (
-                <p className="mt-4 rounded-lg border border-dashed border-border-strong/70 bg-white/[0.015] px-3 py-3.5 text-center text-[11.5px] text-muted">
+                <p className="rounded-lg border border-dashed border-border-strong/70 bg-surface/40 px-3 py-3.5 text-center text-[11.5px] text-muted">
                   Run the multiplication to benchmark both approaches.
                 </p>
               )}
-            </div>
-          </HoloPanel>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="space-y-4">
-          <HoloPanel bracket="rgba(95,240,216,0.3)">
-            <div className="px-5 pb-5 pt-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-display flex items-center gap-2 text-[13px] font-semibold tracking-tight">
-                    <Binary className="h-3.5 w-3.5 text-accent-soft" />
-                    Dry run
-                  </h3>
-                  <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
-                    Splits, sub-products and recombination.
-                  </p>
-                </div>
-                {step ? <Badge variant="accent">{step.type}</Badge> : null}
-              </div>
-              <div className="mt-3">
-                <DryRunPanel
-                  player={player}
-                  accent="accent"
-                  step={
-                    step
-                      ? {
-                          type: step.type,
-                          depth: step.depth,
-                          message: step.message,
-                        }
-                      : null
-                  }
-                  meta={
-                    stack.length > 0
-                      ? `${stack.length} frame${stack.length === 1 ? "" : "s"}`
-                      : undefined
-                  }
-                  emptyIcon={<Binary className="h-4 w-4 text-muted/50" />}
-                  emptyHint="Press “Multiply” to launch the visual dry run, then play, step forward, step back or reset."
-                >
-                  {stack.length > 0 ? <CallStack stack={stack} /> : null}
-                  {step ? <KaratsubaBoard step={step} /> : null}
-                </DryRunPanel>
-              </div>
-            </div>
-          </HoloPanel>
-
-          <HoloPanel bracket="rgba(143,182,255,0.3)">
-            <div className="flex items-center justify-between px-5 pb-3 pt-4">
+          <Card>
+            <CardHeader className="flex-row items-start justify-between gap-3">
               <div>
-                <h3 className="font-display flex items-center gap-2 text-[13px] font-semibold tracking-tight">
+                <CardTitle>
+                  <Binary className="h-3.5 w-3.5 text-accent-soft" />
+                  Dry run
+                </CardTitle>
+                <CardDescription>
+                  Splits, sub-products and recombination.
+                </CardDescription>
+              </div>
+              {step ? <Badge variant="accent">{step.type}</Badge> : null}
+            </CardHeader>
+            <CardContent>
+              <DryRunPanel
+                player={player}
+                accent="accent"
+                step={
+                  step
+                    ? {
+                        type: step.type,
+                        depth: step.depth,
+                        message: step.message,
+                      }
+                    : null
+                }
+                meta={
+                  stack.length > 0
+                    ? `${stack.length} frame${stack.length === 1 ? "" : "s"}`
+                    : undefined
+                }
+                emptyIcon={<Binary className="h-4 w-4 text-muted/50" />}
+                emptyHint="Press “Multiply” to launch the visual dry run, then play, step forward, step back or reset."
+              >
+                {stack.length > 0 ? <CallStack stack={stack} /> : null}
+                {step ? <KaratsubaBoard step={step} /> : null}
+              </DryRunPanel>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex-row items-center justify-between">
+              <div>
+                <CardTitle>
                   <GitBranch className="h-3.5 w-3.5 text-primary-soft" />
                   Recursion trace
-                </h3>
-                <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
-                  Click any step to jump straight to it.
-                </p>
+                </CardTitle>
+                <CardDescription>Click any step to jump straight to it.</CardDescription>
               </div>
               {trace.length > 0 ? (
                 <Badge variant="outline">{trace.length}</Badge>
               ) : null}
-            </div>
-            <div className="px-5 pb-5">
+            </CardHeader>
+            <CardContent>
               <StepLog
                 steps={logSteps}
                 activeIndex={player.index}
@@ -713,20 +545,19 @@ export function KaratsubaPage() {
                 accent="accent"
                 emptyHint="Run the multiplication to inspect its recursion trace."
               />
-            </div>
-          </HoloPanel>
+            </CardContent>
+          </Card>
 
-          <HoloPanel bracket="rgba(95,240,216,0.3)">
-            <div className="px-5 pb-5 pt-4">
-              <h3 className="font-display flex items-center gap-2 text-[13px] font-semibold tracking-tight">
+          <Card>
+            <CardHeader>
+              <CardTitle>
                 <Layers className="h-3.5 w-3.5 text-accent-soft" />
                 How it works
-              </h3>
-              <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
-                Three half-size products replace four.
-              </p>
-
-              <div className="mt-4 rounded-lg border border-white/[0.08] bg-white/[0.02] p-3.5 font-mono text-[11px] leading-relaxed text-muted-strong">
+              </CardTitle>
+              <CardDescription>Three half-size products replace four.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="rounded-lg border border-border bg-surface/60 p-3.5 font-mono text-[11px] leading-relaxed text-muted-strong">
                 <p>
                   x = a · 10<sup>m</sup> + b
                 </p>
@@ -742,8 +573,7 @@ export function KaratsubaPage() {
                   xy = z₂ · 10<sup>2m</sup> + z₁ · 10<sup>m</sup> + z₀
                 </p>
               </div>
-
-              <div className="mt-4 rounded-lg border border-white/[0.07] bg-white/[0.015] p-3">
+              <div className="rounded-lg border border-border bg-surface/50 p-3">
                 <p className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-muted">
                   Why it is faster
                 </p>
@@ -753,8 +583,8 @@ export function KaratsubaPage() {
                   <sup>1.585</sup>).
                 </p>
               </div>
-            </div>
-          </HoloPanel>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState, type MouseEvent } from "react"
 import {
   AlertTriangle,
   CheckCircle2,
@@ -7,7 +7,6 @@ import {
   Layers,
   Loader2,
   MousePointerClick,
-  Orbit,
   Play,
   Radar,
   Shuffle,
@@ -24,15 +23,20 @@ import {
 } from "../ClosetPair"
 import { Badge } from "../components/ui/badge"
 import { Button } from "../components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card"
 import { DryRunPanel } from "../components/DryRunPanel"
 import { LiveStats } from "../components/LiveStats"
-import { PointMap } from "../components/PointMap"
+import { PointCanvas } from "../components/PointCanvas"
 import { Stat } from "../components/Stat"
 import { StepLog } from "../components/StepLog"
-import { HoloPanel, HudChip } from "../components/Holo"
 import { DEFAULT_SPEED, usePlayer } from "../hooks/usePlayer"
 import { cn, formatDistance, formatMs, formatNumber } from "../lib/utils"
-import { CloudScene } from "../three/CloudScene"
 
 const MAX_POINTS = 1000
 const SPACE = 1000
@@ -58,6 +62,7 @@ export function ClosestPairPage() {
   const [timing, setTiming] = useState<Timing | null>(null)
   const [isRunning, setIsRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
   const player = usePlayer(DEFAULT_SPEED)
   const { clear: clearPlayer, seek, load } = player
 
@@ -79,15 +84,18 @@ export function ClosestPairPage() {
     [clearRun],
   )
 
-  const addPoint = useCallback(
-    (point: Point) => {
-      if (trace.length > 0) return
-      setPoints((prev) => [...prev, point])
-      setCount((prev) => Math.min(prev + 1, MAX_POINTS + 1))
-      clearRun()
-    },
-    [trace.length, clearRun],
-  )
+  const addPoint = (event: MouseEvent<SVGSVGElement>) => {
+    if (trace.length > 0) return
+    const svg = svgRef.current
+    if (!svg) return
+    const rect = svg.getBoundingClientRect()
+    const x = Math.round(((event.clientX - rect.left) / rect.width) * SPACE)
+    const y = Math.round(((event.clientY - rect.top) / rect.height) * SPACE)
+    if (x < 0 || y < 0 || x > SPACE || y > SPACE) return
+    setPoints((prev) => [...prev, { x, y }])
+    setCount((prev) => Math.min(prev + 1, MAX_POINTS + 1))
+    clearRun()
+  }
 
   const clear = () => {
     setPoints([])
@@ -160,23 +168,6 @@ export function ClosestPairPage() {
     timing && timing.divide > 0 ? timing.brute / timing.divide : null
   const maxTime = timing ? Math.max(timing.divide, timing.brute, 0.001) : 1
 
-  // Deep link support: /?autoplay=1 launches the dry run immediately.
-  // /?autoplay=1&step=140 jumps straight to a given trace event.
-  const startedRef = useRef(false)
-  useEffect(() => {
-    if (startedRef.current) return
-    if (!window.location.search.includes("autoplay")) return
-    startedRef.current = true
-    const target = Number(new URLSearchParams(window.location.search).get("step"))
-    window.setTimeout(() => {
-      run()
-      if (Number.isFinite(target) && target > 0) {
-        window.setTimeout(() => seek(target), 500)
-      }
-    }, 240)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -189,12 +180,12 @@ export function ClosestPairPage() {
             <Badge variant="outline">O(n log n)</Badge>
             <Badge variant="outline">2D geometry</Badge>
           </div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight md:text-[1.75rem]">
+          <h1 className="text-2xl font-semibold tracking-tight md:text-[1.75rem]">
             Closest Pair of Points
           </h1>
           <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted">
-            Generate a point cloud, place your own points, then replay the
-            divide-and-conquer dry run — the plane is cut in front of you.
+            Generate a point cloud, drop your own points, then replay the
+            divide-and-conquer dry run step by step.
           </p>
         </div>
         <Button
@@ -221,21 +212,21 @@ export function ClosestPairPage() {
 
       <div className="grid gap-4 xl:grid-cols-[1.55fr_1fr]">
         <div className="space-y-4">
-          <HoloPanel className="overflow-hidden" bracket="rgba(143,182,255,0.4)">
-            <div className="flex flex-wrap items-center justify-between gap-3 px-5 pb-3 pt-4">
+          <Card className="overflow-hidden">
+            <CardHeader className="flex-row items-center justify-between gap-3">
               <div>
-                <h2 className="font-display flex items-center gap-2 text-[13px] font-semibold tracking-tight text-foreground">
+                <CardTitle>
                   <Crosshair className="h-3.5 w-3.5 text-primary-soft" />
                   Point cloud
-                </h2>
-                <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
+                </CardTitle>
+                <CardDescription>
                   {isLive
-                    ? "Dry run active — the blade, the strip and the winner follow the current step."
-                    : "Drag to orbit the stage, click the floor to place a point."}
-                </p>
+                    ? "Dry run active — highlights follow the current step."
+                    : "Click anywhere on the canvas to add a point."}
+                </CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <HudChip tone="primary">{formatNumber(points.length)} pts</HudChip>
+                <Badge variant="outline">{formatNumber(points.length)} pts</Badge>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -246,106 +237,53 @@ export function ClosestPairPage() {
                   <Shuffle className="h-3.5 w-3.5" />
                 </Button>
               </div>
-            </div>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-border bg-[#0a0b0d]">
+                <PointCanvas
+                  points={points}
+                  step={step}
+                  best={liveBest}
+                  transitionMs={player.transitionMs}
+                  interactive={trace.length === 0}
+                  svgRef={svgRef}
+                  onAddPoint={addPoint}
+                />
 
-            <div className="relative aspect-[16/11] w-full overflow-hidden border-y border-white/[0.07] bg-[radial-gradient(120%_90%_at_50%_0%,#0a1020,#03050c)]">
-              <CloudScene
-                points={points}
-                step={step}
-                best={liveBest}
-                space={SPACE}
-                editable={trace.length === 0}
-                onAddPoint={addPoint}
-                className="absolute inset-0"
-              />
+                {points.length === 0 ? (
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
+                    <MousePointerClick className="h-6 w-6 text-muted/50" />
+                    <p className="text-[11.5px] text-muted">
+                      Click to add points or randomize the cloud.
+                    </p>
+                  </div>
+                ) : null}
 
-              {points.length === 0 ? (
-                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
-                  <MousePointerClick className="h-6 w-6 text-muted/50" />
-                  <p className="text-[11.5px] text-muted">
-                    Click the floor to add points or randomize the cloud.
-                  </p>
-                </div>
-              ) : null}
-
-              {/* Step readout */}
-              <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2">
                 {step ? (
-                  <span className="rounded-md border border-border-strong bg-[#0b0c0f]/90 px-2 py-1 backdrop-blur">
+                  <div className="absolute left-3 top-3 flex items-center gap-2 rounded-md border border-border-strong bg-[#0b0c0f]/90 px-2 py-1">
                     <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-primary-soft">
                       {step.type}
                     </span>
-                    <span className="ml-2 font-mono text-[9.5px] text-muted">
+                    <span className="font-mono text-[9.5px] text-muted">
                       depth {step.depth}
                     </span>
-                  </span>
+                  </div>
                 ) : null}
+
                 {hasStrip && step?.strip?.length ? (
-                  <span className="rounded-md border border-warning/30 bg-[#0b0c0f]/90 px-2 py-1 font-mono text-[9.5px] text-warning backdrop-blur">
+                  <div className="absolute right-3 top-3 rounded-md border border-warning/30 bg-[#0b0c0f]/90 px-2 py-1 font-mono text-[9.5px] text-warning">
                     strip · {step.strip.length}
-                  </span>
+                  </div>
                 ) : null}
               </div>
-
-              {/* Live geometry readout */}
-              <div className="pointer-events-none absolute right-3 top-3 hidden flex-col items-end gap-1 sm:flex">
-                <span className="rounded-md border border-white/10 bg-[#05070e]/85 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-muted backdrop-blur">
-                  split x ={" "}
-                  <span className="text-primary-soft">
-                    {step?.midX !== undefined ? step.midX : "—"}
-                  </span>
-                </span>
-                <span className="rounded-md border border-white/10 bg-[#05070e]/85 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-muted backdrop-blur">
-                  d ={" "}
-                  <span className="text-accent-soft">
-                    {liveBest ? formatDistance(liveBest.d) : "—"}
-                  </span>
-                </span>
-              </div>
-
-              {/* Orbit hint */}
-              <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-1.5 rounded-md border border-white/10 bg-[#0b0c0f]/80 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-muted backdrop-blur">
-                <Orbit className="h-3 w-3" />
-                drag to orbit
-              </div>
-
-              {/* Exact 2D instrument map */}
-              <div className="pointer-events-none absolute bottom-3 right-3 w-32 overflow-hidden rounded-lg border border-white/12 bg-[#05070e]/88 backdrop-blur-md sm:w-36">
-                <div className="flex items-center justify-between border-b border-white/10 px-2 py-1">
-                  <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-muted">
-                    minimap
-                  </span>
-                  <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-muted/60">
-                    exact 2d
-                  </span>
-                </div>
-                <div className="relative aspect-square w-full">
-                  <PointMap points={points} step={step} best={liveBest} space={SPACE} />
-                </div>
-                <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 border-t border-white/10 px-2 py-1.5 font-mono text-[8px] uppercase tracking-[0.1em] text-muted">
-                  <span className="flex items-center gap-1">
-                    <i className="h-1.5 w-1.5 rounded-full bg-[#8fbaff]" />
-                    left
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <i className="h-1.5 w-1.5 rounded-full bg-[#5fe0cf]" />
-                    right
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <i className="h-1.5 w-1.5 rounded-full bg-[#ffc05c]" />
-                    strip
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <i className="h-1.5 w-1.5 rounded-full bg-[#5ff0d8]" />
-                    winner
-                  </span>
-                </div>
-              </div>
-            </div>
-          </HoloPanel>
+            </CardContent>
+          </Card>
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <LiveStats best={liveBest} transitionMs={player.transitionMs} />
+            <LiveStats
+              best={liveBest}
+              transitionMs={player.transitionMs}
+            />
             <Stat
               icon={GitBranch}
               label="Trace steps"
@@ -380,18 +318,19 @@ export function ClosestPairPage() {
             />
           </div>
 
-          <HoloPanel bracket="rgba(95,240,216,0.3)">
-            <div className="px-5 pb-5 pt-4">
-              <h3 className="font-display flex items-center gap-2 text-[13px] font-semibold tracking-tight">
+          <Card>
+            <CardHeader>
+              <CardTitle>
                 <Timer className="h-3.5 w-3.5 text-accent-soft" />
                 Performance
-              </h3>
-              <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
+              </CardTitle>
+              <CardDescription>
                 Measured on this machine for the current cloud.
-              </p>
-
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               {timing ? (
-                <div className="mt-4 space-y-3.5">
+                <div className="space-y-3.5">
                   <Bar
                     label="Divide & conquer"
                     value={timing.divide}
@@ -404,7 +343,7 @@ export function ClosestPairPage() {
                     max={maxTime}
                     color="bg-danger/80"
                   />
-                  <div className="flex items-center justify-between border-t border-white/[0.07] pt-3">
+                  <div className="flex items-center justify-between border-t border-border pt-3">
                     <span className="text-[11px] text-muted">
                       Speed-up vs. brute force
                     </span>
@@ -417,25 +356,24 @@ export function ClosestPairPage() {
                   </div>
                 </div>
               ) : (
-                <p className="mt-4 rounded-lg border border-dashed border-border-strong/70 bg-surface/40 px-3 py-3.5 text-center text-[11.5px] text-muted">
+                <p className="rounded-lg border border-dashed border-border-strong/70 bg-surface/40 px-3 py-3.5 text-center text-[11.5px] text-muted">
                   Run the algorithm to benchmark both approaches.
                 </p>
               )}
-            </div>
-          </HoloPanel>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="space-y-4">
-          <HoloPanel bracket="rgba(143,182,255,0.3)">
-            <div className="px-5 pb-5 pt-4">
-              <h3 className="font-display text-[13px] font-semibold tracking-tight">
-                Configuration
-              </h3>
-              <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuration</CardTitle>
+              <CardDescription>
                 Tune the input size, then generate a fresh cloud.
-              </p>
-
-              <div className="mt-4">
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
                 <div className="mb-2 flex items-center justify-between">
                   <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
                     Number of points
@@ -459,8 +397,11 @@ export function ClosestPairPage() {
                 </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <Button variant="secondary" onClick={() => regenerate(count || 120)}>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => regenerate(count || 120)}
+                >
                   <Shuffle className="h-3.5 w-3.5" />
                   Generate
                 </Button>
@@ -470,91 +411,85 @@ export function ClosestPairPage() {
                 </Button>
               </div>
 
-              <div className="mt-4 rounded-lg border border-white/[0.07] bg-white/[0.02] p-3">
+              <div className="rounded-lg border border-border bg-surface/50 p-3">
                 <p className="flex items-center gap-1.5 font-mono text-[9.5px] uppercase tracking-[0.12em] text-muted">
                   <MousePointerClick className="h-3 w-3" />
-                  Stage controls
+                  Canvas editing
                 </p>
                 <p className="mt-1.5 text-[11.5px] leading-relaxed text-muted">
-                  Drag the stage to orbit the camera, scroll to zoom. Clicking
-                  the floor places a point — editing is locked while a dry run
-                  is loaded.
+                  Click the point cloud to drop a point at that coordinate.
+                  Editing is locked while a dry run is loaded.
                 </p>
               </div>
-            </div>
-          </HoloPanel>
+            </CardContent>
+          </Card>
 
-          <HoloPanel bracket="rgba(143,182,255,0.3)">
-            <div className="px-5 pb-5 pt-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-display flex items-center gap-2 text-[13px] font-semibold tracking-tight">
-                    <Play className="h-3.5 w-3.5 text-primary-soft" />
-                    Dry run
-                  </h3>
-                  <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
-                    Watch each split, comparison and merge.
-                  </p>
-                </div>
-                {step ? <Badge variant="primary">{step.type}</Badge> : null}
-              </div>
-              <div className="mt-3">
-                <DryRunPanel
-                  player={player}
-                  step={
-                    step
-                      ? {
-                          type: step.type,
-                          depth: step.depth,
-                          message: step.message,
-                        }
-                      : null
-                  }
-                  emptyIcon={
-                    <MousePointerClick className="h-4 w-4 text-muted/50" />
-                  }
-                  emptyHint="Press “Run algorithm” to launch the visual dry run, then use play, next, previous and reset."
-                />
-              </div>
-            </div>
-          </HoloPanel>
-
-          <HoloPanel bracket="rgba(143,182,255,0.3)">
-            <div className="flex items-center justify-between px-5 pb-3 pt-4">
+          <Card>
+            <CardHeader className="flex-row items-start justify-between gap-3">
               <div>
-                <h3 className="font-display flex items-center gap-2 text-[13px] font-semibold tracking-tight">
+                <CardTitle>
+                  <Play className="h-3.5 w-3.5 text-primary-soft" />
+                  Dry run
+                </CardTitle>
+                <CardDescription>
+                  Watch each split, comparison and merge.
+                </CardDescription>
+              </div>
+              {step ? <Badge variant="primary">{step.type}</Badge> : null}
+            </CardHeader>
+            <CardContent>
+              <DryRunPanel
+                player={player}
+                step={
+                  step
+                    ? {
+                        type: step.type,
+                        depth: step.depth,
+                        message: step.message,
+                      }
+                    : null
+                }
+                emptyIcon={
+                  <MousePointerClick className="h-4 w-4 text-muted/50" />
+                }
+                emptyHint="Press “Run algorithm” to launch the visual dry run, then use play, next, previous and reset."
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex-row items-center justify-between">
+              <div>
+                <CardTitle>
                   <GitBranch className="h-3.5 w-3.5 text-primary-soft" />
                   Recursion trace
-                </h3>
-                <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
-                  Click any step to jump straight to it.
-                </p>
+                </CardTitle>
+                <CardDescription>Click any step to jump straight to it.</CardDescription>
               </div>
               {trace.length > 0 ? (
                 <Badge variant="outline">{trace.length}</Badge>
               ) : null}
-            </div>
-            <div className="px-5 pb-5">
+            </CardHeader>
+            <CardContent>
               <StepLog
                 steps={logSteps}
                 activeIndex={player.index}
                 onSelect={seek}
                 emptyHint="Run the algorithm to inspect its divide-and-conquer trace."
               />
-            </div>
-          </HoloPanel>
+            </CardContent>
+          </Card>
 
-          <HoloPanel bracket="rgba(95,240,216,0.3)">
-            <div className="px-5 pb-5 pt-4">
-              <h3 className="font-display flex items-center gap-2 text-[13px] font-semibold tracking-tight">
+          <Card>
+            <CardHeader>
+              <CardTitle>
                 <Layers className="h-3.5 w-3.5 text-accent-soft" />
                 How it works
-              </h3>
-              <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
-                Two halves, then a narrow strip check.
-              </p>
-
-              <ol className="mt-4 space-y-2">
+              </CardTitle>
+              <CardDescription>Two halves, then a narrow strip check.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <ol className="space-y-2">
                 {[
                   {
                     title: "Sort",
@@ -586,8 +521,7 @@ export function ClosestPairPage() {
                   </li>
                 ))}
               </ol>
-
-              <div className="mt-4 rounded-lg border border-white/[0.07] bg-white/[0.02] p-3">
+              <div className="rounded-lg border border-border bg-surface/50 p-3">
                 <p className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-muted">
                   Complexity
                 </p>
@@ -595,8 +529,8 @@ export function ClosestPairPage() {
                   T(n) = 2T(n/2) + O(n) → Θ(n log n)
                 </p>
               </div>
-            </div>
-          </HoloPanel>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
