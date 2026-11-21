@@ -11,6 +11,14 @@ const toneClasses: Record<Tone, string> = {
   neutral: "text-muted-strong",
 }
 
+const glowClasses: Record<Tone, string> = {
+  primary: "from-primary/25",
+  accent: "from-accent/25",
+  success: "from-success/25",
+  warning: "from-warning/25",
+  neutral: "from-white/10",
+}
+
 interface StatProps {
   icon: LucideIcon
   label: string
@@ -31,24 +39,32 @@ export function Stat({
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col justify-between rounded-xl border border-border bg-surface/60 px-3.5 py-3",
+        "glass-soft relative flex min-w-0 flex-col justify-between overflow-hidden rounded-2xl px-3.5 py-3",
         className,
       )}
     >
-      <div className="flex items-center gap-1.5">
+      <span
+        className={cn(
+          "pointer-events-none absolute inset-x-0 -top-8 h-16 bg-gradient-to-b to-transparent opacity-70",
+          glowClasses[tone],
+        )}
+      />
+      <div className="relative flex items-center gap-1.5">
         <Icon
           className={cn("h-3 w-3 shrink-0", toneClasses[tone])}
           strokeWidth={2}
         />
-        <span className="truncate font-mono text-[9.5px] uppercase tracking-[0.12em] text-muted">
+        <span className="truncate font-mono text-[9px] uppercase tracking-[0.14em] text-muted">
           {label}
         </span>
       </div>
-      <p className="mt-2.5 truncate font-mono text-[15px] font-medium tabular-nums tracking-tight text-foreground">
+      <p className="relative mt-2.5 truncate font-mono text-[15px] font-medium tabular-nums tracking-tight text-foreground">
         {value}
       </p>
       {hint ? (
-        <p className="mt-0.5 truncate text-[10.5px] text-muted/80">{hint}</p>
+        <p className="relative mt-0.5 truncate text-[10.5px] text-muted/80">
+          {hint}
+        </p>
       ) : null}
     </div>
   )
